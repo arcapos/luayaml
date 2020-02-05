@@ -1,0 +1,33 @@
+---
+fruits:
+  - Apple
+  - Banana
+  - Orange
+
+vegetables:
+  - Bean
+  - Cauliflower
+
+record:
+  name: Marc
+  surname: Balmer
+  town:
+  skills:
+    - Lua
+    - C
+  subrecord:
+    music: all
+
+more_fruits: ['Cherry', 'Citron']
+
+even_more_fruits:
+  - Pineapple
+
+test: yes
+
+newlines: |
+  the big
+  hopper
+  over trees
+
+a: "1.0"
