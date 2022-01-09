@@ -15,6 +15,8 @@ local function dump(t, indent)
 		if type(v) == 'table' then
 			io.write(':\n')
 			dump(v, (indent or 0) + 1)
+		elseif type(v) == 'boolean' then
+			io.write(v and ' !!bool true\n' or  ' !!bool false\n')
 		else
 			io.write(' = ' .. v .. '\n')
 		end
@@ -38,10 +40,13 @@ print('Parse YAML data from a file:')
 data = yaml.parsefile('test.yaml')
 dump(data)
 
+data = yaml.parsefile('numbers.yaml')
+dump(data)
+
 print('Parse YAMl data from a non-existent file:')
 
 -- This will throw an error
-local status, result = pcall(yaml.parsefile, 'nonexistant.yaml')
+local status, result = pcall(yaml.parsefile, 'nonexistent.yaml')
 if status == false then
 	print('yaml.parsefile failed: ' .. result)
 end

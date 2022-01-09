@@ -18,6 +18,7 @@
 
 /* YAML for Lua */
 
+#include <ctype.h>
 #include <lua.h>
 #include <lauxlib.h>
 #include <yaml.h>
@@ -30,6 +31,92 @@ static int verbose = 0;
 	do { if (verbose >= level) fprintf(stderr, fmt, ##__VA_ARGS__); \
 	} while (0)
 
+static int
+push_boolean(lua_State *L, char *v, int l) {
+	if (!strncasecmp(v, "no", l)
+	    || !strncasecmp(v, "false", l)
+	    || !strncasecmp(v, "off", l)) {
+		lua_pushboolean(L, 0);
+		return 0;
+	} else if (!strncasecmp(v, "yes", l)
+	    || !strncasecmp(v, "true", l)
+	    || !strncasecmp(v, "on", l)) {
+		lua_pushboolean(L, 1);
+		return 0;
+	} else
+		return -1;
+}
+
+static int
+push_null(lua_State *L, char *v, int l)
+{
+	if (!strncmp(v, "null", l) || !strncmp(v, "~", l)) {
+		lua_pushnil(L);
+		return 0;
+	} else
+		return -1;
+}
+
+static int
+push_integer(lua_State *L, char *v, int l)
+{
+	int n = 0;
+
+	if (*v == '+' || *v == '-')
+		n++;
+	for (; n < l; n++)
+		if (!isdigit(v[n]))
+			return -1;
+	lua_pushinteger(L, atoi(v));
+	return 0;
+}
+
+static int
+push_hexadecimal(lua_State *L, char *v, int l)
+{
+	int n;
+
+	if (l > 2) {
+		if (strncmp(v, "0x", 2))
+			return -1;
+		for (n = 2; n < l; n++)
+			if (!isxdigit(v[n]))
+				return -1;
+		lua_pushinteger(L, strtol(v, NULL, 16));
+		return 0;
+	}
+	return -1;
+}
+
+static void
+push_scalar(lua_State *L, char *value, int length, char *tag)
+{
+	if (tag != NULL) {
+		if (!strcmp(tag, YAML_BOOL_TAG)) {
+			if (push_boolean(L, value, length) < 0)
+				lua_pushnil(L);
+		} else if (!strcmp(tag, YAML_INT_TAG)) {
+			if (push_hexadecimal(L, value, length))
+				if (push_integer(L, value, length))
+					lua_pushnil(L);
+		} else if (!strcmp(tag, YAML_NULL_TAG))
+			lua_pushnil(L);
+		else if (!strcmp(tag, YAML_FLOAT_TAG))
+			lua_pushnumber(L, atof(value));
+		else if (!strcmp(tag, YAML_STR_TAG))
+			lua_pushlstring(L, value, length);
+	} else {
+		if (!push_boolean(L, value, length))
+			return;
+		if (!push_null(L, value, length))
+			return;
+		if (!push_integer(L, value, length))
+			return;
+		if (!push_hexadecimal(L, value, length))
+			return;
+		lua_pushlstring(L, value, length);
+	}
+}
 static int
 parse(lua_State *L, yaml_parser_t parser)
 {
@@ -73,9 +160,14 @@ parse(lua_State *L, yaml_parser_t parser)
 				if (sequence)
 					lua_pushinteger(L, sequence++);
 
-				lua_pushlstring(L,
-					event.data.scalar.value,
-					event.data.scalar.length);
+				if (value)
+					push_scalar(L, event.data.scalar.value,
+					    event.data.scalar.length,
+					    event.data.scalar.tag);
+				else
+					lua_pushlstring(L,
+					    event.data.scalar.value,
+					    event.data.scalar.length);
 
 				if (sequence)
 					lua_settable(L, -3);

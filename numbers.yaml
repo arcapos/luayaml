@@ -1,0 +1,7 @@
+numbers:
+  integer: 42
+  hexadecimal: 0x1b
+  null1: ~
+  null2: null
+  boolean: ON
+  b1: !!str "True"
