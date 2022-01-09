@@ -27,9 +27,13 @@
 
 static int verbose = 0;
 
+#ifdef DEBUG
 #define dprintf(level, fmt, ...) \
 	do { if (verbose >= level) fprintf(stderr, fmt, ##__VA_ARGS__); \
 	} while (0)
+#else
+#define dprintf
+#endif
 
 static int
 push_boolean(lua_State *L, char *v, int l) {
@@ -267,12 +271,14 @@ parseFile(lua_State *L)
 	return 1;
 }
 
+#ifdef DEBUG
 static int
 verbosity(lua_State *L)
 {
 	verbose = luaL_checkinteger(L, 1);
 	return 0;
 }
+#endif
 
 int
 luaopen_yaml(lua_State *L)
@@ -280,7 +286,9 @@ luaopen_yaml(lua_State *L)
 	struct luaL_Reg luayaml[] = {
 		{ "parse",	parseString },
 		{ "parsefile",	parseFile },
+#ifdef DEBUG
 		{ "verbosity",	verbosity },
+#endif
 		{ NULL, NULL }
 	};
 
@@ -290,7 +298,11 @@ luaopen_yaml(lua_State *L)
 	    "micro systems marc balmer");
 	lua_settable(L, -3);
 	lua_pushliteral(L, "_DESCRIPTION");
+#ifdef DEBUG
+	lua_pushliteral(L, "YAML for Lua (with debug functions)");
+#else
 	lua_pushliteral(L, "YAML for Lua");
+#endif
 	lua_settable(L, -3);
 	lua_pushliteral(L, "_VERSION");
 	lua_pushliteral(L, "yaml 1.1.0");
