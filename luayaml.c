@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 - 2020 Micro Systems Marc Balmer, CH-5073 Gipf-Oberfrick.
+ * Copyright (c) 2018 - 2022 Micro Systems Marc Balmer, CH-5073 Gipf-Oberfrick.
  * All rights reserved.
  *
  * This source code is the proprietary confidential property of Micro Systems
@@ -194,7 +194,7 @@ luaopen_yaml(lua_State *L)
 
 	luaL_newlib(L, luayaml);
 	lua_pushliteral(L, "_COPYRIGHT");
-	lua_pushliteral(L, "Copyright (C) 2018 - 2020"
+	lua_pushliteral(L, "Copyright (C) 2018 - 2022 "
 	    "micro systems marc balmer");
 	lua_settable(L, -3);
 	lua_pushliteral(L, "_DESCRIPTION");

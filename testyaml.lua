@@ -38,7 +38,7 @@ print('Parse YAML data from a file:')
 data = yaml.parsefile('test.yaml')
 dump(data)
 
-print('Parse YAMl data from a non-existant file:')
+print('Parse YAMl data from a non-existent file:')
 
 -- This will throw an error
 local status, result = pcall(yaml.parsefile, 'nonexistant.yaml')

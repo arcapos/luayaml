@@ -25,6 +25,15 @@ even_more_fruits:
 
 test: yes
 
+multilines:
+  - >
+    abc
+    def
+
+multiline_2:
+  - first
+    second
+
 newlines: |
   the big
   hopper
