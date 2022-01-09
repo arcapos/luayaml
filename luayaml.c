@@ -25,9 +25,9 @@
 
 #include "luayaml.h"
 
+#ifdef DEBUG
 static int verbose = 0;
 
-#ifdef DEBUG
 #define dprintf(level, fmt, ...) \
 	do { if (verbose >= level) fprintf(stderr, fmt, ##__VA_ARGS__); \
 	} while (0)
