@@ -293,7 +293,7 @@ luaopen_yaml(lua_State *L)
 	lua_pushliteral(L, "YAML for Lua");
 	lua_settable(L, -3);
 	lua_pushliteral(L, "_VERSION");
-	lua_pushliteral(L, "yaml 1.0.1");
+	lua_pushliteral(L, "yaml 1.1.0");
 	lua_settable(L, -3);
 	return 1;
 }
