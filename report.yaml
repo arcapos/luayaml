@@ -1,0 +1,44 @@
+name: Warengruppen
+
+action: Liste ausgeben
+
+header: |
+  <h1>Warengruppen</h1>
+  <hr>
+
+code: !Lua |
+  print(42)
+  print(10)
+
+function: !Lua |
+  print 'selector'
+  if pos == '-1' then
+    return 'select * from syt_pos order by name'
+  else
+    return 'select name, hostname, descr from syt_pos where id = $1::integer', { '{pos}' }
+  end
+
+inputs:
+  -
+    name: name
+    label: Name der Warengruppe
+    type:  text
+    value: ''
+  -
+    name: text2
+    type: number
+
+query:
+  select * from stt_group where is_public = true and name ilike $1 order by name
+
+params:
+  -
+    '%{name}%'
+
+body: |
+  {name}
+  <br>
+
+footer:
+  <hr>
+  <br>Das wars<br>

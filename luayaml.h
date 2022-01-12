@@ -21,6 +21,8 @@
 #ifndef __LUA_YAML__
 #define __LUA_YAML__
 
+#define LUAYAML_LUA_TAG		"!Lua"
+
 extern int luaopen_yaml(lua_State *L);
 
 #endif /* __LUA_YAML__ */

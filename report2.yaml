@@ -1,0 +1,48 @@
+name: Verkaufsliste
+
+action: Liste erstellen
+
+inputs:
+  -
+    type: text
+    name: von
+    label: Start Datum/Zeit
+    value: !Lua return os.date('%d.%m.%Y 00:00:00')
+  -
+    type: text
+    name: bis
+    label: Start Datum/Zeit
+    value: !Lua return os.date('%d.%m.%Y 23:59:59')
+  -
+    type: select
+    name: pos
+    label: Kasse
+    values:
+      -
+        -
+          selector: -1
+          display: Alle
+        -
+          query: select id, name from syt_pos order by name
+          selector: {id}
+          display: {name}
+
+query: !Lua |
+  print('selector')
+  if pos == '-1' then
+    return 'select * from syt_pos order by name'
+  else
+    return 'select name, hostname, descr from syt_pos where id = $1::integer', { '{pos}' }
+  end
+
+params:
+  -
+    '{pos}'
+
+header: <h1>Kassen</h1>
+
+body: <pre>{hostname}</pre>
+
+footer: <br>Ende</br>
+
+
