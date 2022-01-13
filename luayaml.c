@@ -116,12 +116,19 @@ push_scalar(lua_State *L, char *value, int length, char *tag, int env)
 			lua_pushnumber(L, atof(value));
 		else if (!strcmp(tag, YAML_STR_TAG))
 			lua_pushlstring(L, value, length);
-		else if (!strcmp(tag, LUAYAML_LUA_TAG)) {
+		else if (!strcmp(tag, LUAYAML_FUNCTION_TAG)) {
 			luaL_loadstring(L, value);
 			if (env > 0) {
 				lua_pushvalue(L, env);
 				lua_setupvalue(L, -2, 1);
 			}
+		} else if (!strcmp(tag, LUAYAML_CALL_TAG)) {
+			luaL_loadstring(L, value);
+			if (env > 0) {
+				lua_pushvalue(L, env);
+				lua_setupvalue(L, -2, 1);
+			}
+			lua_call(L, 0, 1);
 		} else
 			lua_pushlstring(L, value, length);
 	} else {

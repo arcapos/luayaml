@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Micro Systems Marc Balmer, CH-5073 Gipf-Oberfrick.
+ * Copyright (c) 2018 - 2022 Micro Systems Marc Balmer, CH-5073 Gipf-Oberfrick.
  * All rights reserved.
  *
  * This source code is the proprietary confidential property of Micro Systems
@@ -21,7 +21,8 @@
 #ifndef __LUA_YAML__
 #define __LUA_YAML__
 
-#define LUAYAML_LUA_TAG		"!Lua"
+#define LUAYAML_CALL_TAG	"!Lua/call"
+#define LUAYAML_FUNCTION_TAG	"!Lua/function"
 
 extern int luaopen_yaml(lua_State *L);
 

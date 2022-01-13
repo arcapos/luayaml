@@ -7,12 +7,12 @@ inputs:
     type: text
     name: von
     label: Start Datum/Zeit
-    value: !Lua return os.date('%d.%m.%Y 00:00:00')
+    value: !Lua/call return os.date('%d.%m.%Y 00:00:00')
   -
     type: text
     name: bis
     label: Start Datum/Zeit
-    value: !Lua return os.date('%d.%m.%Y 23:59:59')
+    value: !Lua/call return os.date('%d.%m.%Y 23:59:59')
   -
     type: select
     name: pos
@@ -27,7 +27,7 @@ inputs:
           selector: {id}
           display: {name}
 
-query: !Lua |
+query: !Lua/function |
   print('selector')
   if pos == '-1' then
     return 'select * from syt_pos order by name'
