@@ -35,12 +35,12 @@ static int verbose = 0;
 #define dprintf(level, fmt, ...)
 #endif
 
-static int parse_mapping(lua_State *, yaml_parser_t *);
-static int parse_sequence(lua_State *, yaml_parser_t *);
-static int parse_node(lua_State *, yaml_parser_t *, yaml_event_t, int);
-static int parse_document(lua_State *, yaml_parser_t *);
-static int parse_stream(lua_State *, yaml_parser_t *);
-static int parse(lua_State *, yaml_parser_t *);
+static int parse_mapping(lua_State *, yaml_parser_t *, int);
+static int parse_sequence(lua_State *, yaml_parser_t *, int);
+static int parse_node(lua_State *, yaml_parser_t *, yaml_event_t, int, int);
+static int parse_document(lua_State *, yaml_parser_t *, int);
+static int parse_stream(lua_State *, yaml_parser_t *, int);
+static int parse(lua_State *, yaml_parser_t *, int);
 
 static int
 push_boolean(lua_State *L, char *v, int l) {
@@ -100,7 +100,7 @@ push_hexadecimal(lua_State *L, char *v, int l)
 }
 
 static void
-push_scalar(lua_State *L, char *value, int length, char *tag)
+push_scalar(lua_State *L, char *value, int length, char *tag, int env)
 {
 	if (tag != NULL) {
 		if (!strcmp(tag, YAML_BOOL_TAG)) {
@@ -116,9 +116,13 @@ push_scalar(lua_State *L, char *value, int length, char *tag)
 			lua_pushnumber(L, atof(value));
 		else if (!strcmp(tag, YAML_STR_TAG))
 			lua_pushlstring(L, value, length);
-		else if (!strcmp(tag, LUAYAML_LUA_TAG))
+		else if (!strcmp(tag, LUAYAML_LUA_TAG)) {
 			luaL_loadstring(L, value);
-		else
+			if (env > 0) {
+				lua_pushvalue(L, env);
+				lua_setupvalue(L, -2, 1);
+			}
+		} else
 			lua_pushlstring(L, value, length);
 	} else {
 		if (!push_boolean(L, value, length))
@@ -134,7 +138,8 @@ push_scalar(lua_State *L, char *value, int length, char *tag)
 }
 
 static int
-parse_node(lua_State *L, yaml_parser_t *parser, yaml_event_t event, int value)
+parse_node(lua_State *L, yaml_parser_t *parser, yaml_event_t event, int value,
+    int env)
 {
 	int rv = 0;
 
@@ -150,7 +155,7 @@ parse_node(lua_State *L, yaml_parser_t *parser, yaml_event_t event, int value)
 		if (value)
 			push_scalar(L, (char *)event.data.scalar.value,
 				event.data.scalar.length,
-				(char *)event.data.scalar.tag);
+				(char *)event.data.scalar.tag, env);
 		else
 			lua_pushlstring(L,
 				(char *)event.data.scalar.value,
@@ -163,12 +168,12 @@ parse_node(lua_State *L, yaml_parser_t *parser, yaml_event_t event, int value)
 	case YAML_SEQUENCE_START_EVENT:
 		dprintf(1, "YAML_SEQUENCE_START_EVENT\n");
 		lua_newtable(L);
-		parse_sequence(L, parser);
+		parse_sequence(L, parser, env);
 		break;
 	case YAML_MAPPING_START_EVENT:
 		dprintf(1, "YAML_MAPPING_START_EVENT\n");
 		lua_newtable(L);
-		parse_mapping(L, parser);
+		parse_mapping(L, parser, env);
 		break;
 	default:
 		return luaL_error(L, "parse_node: unexpected YAML event %d",
@@ -178,7 +183,7 @@ parse_node(lua_State *L, yaml_parser_t *parser, yaml_event_t event, int value)
 }
 
 static int
-parse_mapping(lua_State *L, yaml_parser_t *parser)
+parse_mapping(lua_State *L, yaml_parser_t *parser, int env)
 {
 	yaml_event_t event;
 	int done = 0;
@@ -192,7 +197,7 @@ parse_mapping(lua_State *L, yaml_parser_t *parser)
 			dprintf(1, "YAML_MAPPING_END_EVENT\n");
 			done = 1;
 		} else {
-			parse_node(L, parser, event, value);
+			parse_node(L, parser, event, value, env);
 			if (value)
 				lua_settable(L, -3);
 			value = 1 - value;
@@ -203,7 +208,7 @@ parse_mapping(lua_State *L, yaml_parser_t *parser)
 }
 
 static int
-parse_sequence(lua_State *L, yaml_parser_t *parser)
+parse_sequence(lua_State *L, yaml_parser_t *parser, int env)
 {
 	yaml_event_t event;
 	int done = 0;
@@ -220,7 +225,7 @@ parse_sequence(lua_State *L, yaml_parser_t *parser)
 			done = 1;
 		} else {
 			lua_pushinteger(L, sequence++);
-			parse_node(L, parser, event, 0);
+			parse_node(L, parser, event, 0, env);
 			lua_settable(L, -3);
 		}
 		yaml_event_delete(&event);
@@ -229,7 +234,7 @@ parse_sequence(lua_State *L, yaml_parser_t *parser)
 }
 
 static int
-parse_document(lua_State *L, yaml_parser_t *parser)
+parse_document(lua_State *L, yaml_parser_t *parser, int env)
 {
 	yaml_event_t event;
 	int done = 0;
@@ -243,7 +248,7 @@ parse_document(lua_State *L, yaml_parser_t *parser)
 			dprintf(1, "YAML_DOCUMENT_END_EVENT\n");
 			done = 1;
 		} else
-			parse_node(L, parser, event, 0);
+			parse_node(L, parser, event, 0, env);
 
 		yaml_event_delete(&event);
 	}
@@ -251,7 +256,7 @@ parse_document(lua_State *L, yaml_parser_t *parser)
 }
 
 static int
-parse_stream(lua_State *L, yaml_parser_t *parser)
+parse_stream(lua_State *L, yaml_parser_t *parser, int env)
 {
 	yaml_event_t event;
 	int done = 0;
@@ -266,7 +271,7 @@ parse_stream(lua_State *L, yaml_parser_t *parser)
 			dprintf(1, "YAML_DOCUMENT_START_EVENT\n");
 			lua_checkstack(L, 1);
 			lua_newtable(L);
-			parse_document(L, parser);
+			parse_document(L, parser, env);
 			break;
 		case YAML_STREAM_END_EVENT:
 			dprintf(1, "YAML_STREAM_END_EVENT\n");
@@ -282,7 +287,7 @@ parse_stream(lua_State *L, yaml_parser_t *parser)
 }
 
 static int
-parse(lua_State *L, yaml_parser_t *parser)
+parse(lua_State *L, yaml_parser_t *parser, int env)
 {
 	yaml_event_t event;
 	int done = 0;
@@ -295,7 +300,7 @@ parse(lua_State *L, yaml_parser_t *parser)
 		switch (event.type) {
 		case YAML_STREAM_START_EVENT:
 			dprintf(1, "YAML_STREAM_START_EVENT\n");
-			parse_stream(L, parser);
+			parse_stream(L, parser, env);
 			done = 1;
 			break;
 		default:
@@ -313,13 +318,16 @@ parseString(lua_State *L)
 	yaml_parser_t parser;
 	const unsigned char *input;
 	size_t len;
+	int env = -1;
 
 	input = (const unsigned char *)luaL_checklstring(L, 1, &len);
+	if (lua_gettop(L) > 1)
+		env = 2;
 
 	yaml_parser_initialize(&parser);
 	yaml_parser_set_input_string(&parser, input, len);
 
-	if (parse(L, &parser))
+	if (parse(L, &parser, env))
 		lua_pushnil(L);
 
 	yaml_parser_delete(&parser);
@@ -332,8 +340,12 @@ parseFile(lua_State *L)
 	yaml_parser_t parser;
 	const char *fnam;
 	FILE *input;
+	int env = -1;
 
 	fnam = luaL_checkstring(L, 1);
+	if (lua_gettop(L) > 1)
+		env = 2;
+
 	input = fopen(fnam, "rb");
 	if (input == NULL)
 		return luaL_error(L, "can't open '%s'", fnam);
@@ -341,7 +353,7 @@ parseFile(lua_State *L)
 	yaml_parser_initialize(&parser);
 	yaml_parser_set_input_file(&parser, input);
 
-	if (parse(L, &parser))
+	if (parse(L, &parser, env))
 		lua_pushnil(L);
 
 	yaml_parser_delete(&parser);
