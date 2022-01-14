@@ -6,11 +6,11 @@ header: |
   <h1>Warengruppen</h1>
   <hr>
 
-code: !Lua |
+code: !Lua/call |
   print(42)
   print(10)
 
-function: !Lua |
+function: !Lua/function |
   print 'selector'
   if pos == '-1' then
     return 'select * from syt_pos order by name'

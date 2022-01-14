@@ -28,6 +28,24 @@
 #ifdef DEBUG
 static int verbose = 0;
 
+static const char *events[] = {
+	"YAML_NO_EVENT",
+	"YAML_STREAM_START_EVENT",
+	"YAML_STREAM_END_EVENT",
+	"YAML_DOCUMENT_START_EVENT",
+	"YAML_DOCUMENT_END_EVENT",
+	"YAML_ALIAS_EVENT",
+	"YAML_SCALAR_EVENT",
+	"YAML_SEQUENCE_START_EVENT",
+  	"YAML_SEQUENCE_END_EVENT",
+	"YAML_MAPPING_START_EVENT",
+	"YAML_MAPPING_END_EVENT"
+};
+
+#define event_name(event) \
+	(event > 0 && event < sizeof(events)/sizeof(events[0]) ? \
+	events[event] : "unknown event type")
+
 #define dprintf(level, fmt, ...) \
 	do { if (verbose >= level) fprintf(stderr, fmt, ##__VA_ARGS__); \
 	} while (0)
@@ -155,10 +173,8 @@ parse_node(lua_State *L, yaml_parser_t *parser, yaml_event_t event, int value,
 	/* Process event */
 	switch (event.type) {
 	case YAML_ALIAS_EVENT:
-		dprintf(1, "YAML_ALIAS_EVENT\n");
 		break;
 	case YAML_SCALAR_EVENT:
-		dprintf(1, "YAML_SCALAR_EVENT");
 		if (value)
 			push_scalar(L, (char *)event.data.scalar.value,
 				event.data.scalar.length,
@@ -167,18 +183,16 @@ parse_node(lua_State *L, yaml_parser_t *parser, yaml_event_t event, int value,
 			lua_pushlstring(L,
 				(char *)event.data.scalar.value,
 				event.data.scalar.length);
-		dprintf(1, "\t%s", event.data.scalar.value);
+		dprintf(1, "value: %s", event.data.scalar.value);
 		if (event.data.scalar.tag)
-			dprintf(1, "\ttag: %s", event.data.scalar.tag);
+			dprintf(1, "tag: %s\n", event.data.scalar.tag);
 		dprintf(1, "\n");
 		break;
 	case YAML_SEQUENCE_START_EVENT:
-		dprintf(1, "YAML_SEQUENCE_START_EVENT\n");
 		lua_newtable(L);
 		parse_sequence(L, parser, env);
 		break;
 	case YAML_MAPPING_START_EVENT:
-		dprintf(1, "YAML_MAPPING_START_EVENT\n");
 		lua_newtable(L);
 		parse_mapping(L, parser, env);
 		break;
@@ -200,10 +214,11 @@ parse_mapping(lua_State *L, yaml_parser_t *parser, int env)
 		if (!yaml_parser_parse(parser, &event))
 			return -1;
 
-		if (event.type == YAML_MAPPING_END_EVENT) {
-			dprintf(1, "YAML_MAPPING_END_EVENT\n");
+		dprintf(1, "%s\n", event_name(event.type));
+
+		if (event.type == YAML_MAPPING_END_EVENT)
 			done = 1;
-		} else {
+		else {
 			parse_node(L, parser, event, value, env);
 			if (value)
 				lua_settable(L, -3);
@@ -227,10 +242,11 @@ parse_sequence(lua_State *L, yaml_parser_t *parser, int env)
 		if (!yaml_parser_parse(parser, &event))
 			return -1;
 
-		if (event.type == YAML_SEQUENCE_END_EVENT) {
-			dprintf(1, "YAML_SEQUENCE_END_EVENT\n");
+		dprintf(1, "%s\n", event_name(event.type));
+
+		if (event.type == YAML_SEQUENCE_END_EVENT)
 			done = 1;
-		} else {
+		else {
 			lua_pushinteger(L, sequence++);
 			parse_node(L, parser, event, 0, env);
 			lua_settable(L, -3);
@@ -250,11 +266,12 @@ parse_document(lua_State *L, yaml_parser_t *parser, int env)
 		if (!yaml_parser_parse(parser, &event))
 			return -1;
 
+		dprintf(1, "%s\n", event_name(event.type));
+
 		/* Process event */
-		if (event.type == YAML_DOCUMENT_END_EVENT) {
-			dprintf(1, "YAML_DOCUMENT_END_EVENT\n");
+		if (event.type == YAML_DOCUMENT_END_EVENT)
 			done = 1;
-		} else
+		else
 			parse_node(L, parser, event, 0, env);
 
 		yaml_event_delete(&event);
@@ -272,16 +289,16 @@ parse_stream(lua_State *L, yaml_parser_t *parser, int env)
 		if (!yaml_parser_parse(parser, &event))
 			return -1;
 
+		dprintf(1, "%s\n", event_name(event.type));
+
 		/* Process event */
 		switch (event.type) {
 		case YAML_DOCUMENT_START_EVENT:
-			dprintf(1, "YAML_DOCUMENT_START_EVENT\n");
 			lua_checkstack(L, 1);
 			lua_newtable(L);
 			parse_document(L, parser, env);
 			break;
 		case YAML_STREAM_END_EVENT:
-			dprintf(1, "YAML_STREAM_END_EVENT\n");
 			done = 1;
 			break;
 		default:
@@ -303,10 +320,11 @@ parse(lua_State *L, yaml_parser_t *parser, int env)
 		if (!yaml_parser_parse(parser, &event))
 			return -1;
 
+		dprintf(1, "%s\n", event_name(event.type));
+
 		/* Process event */
 		switch (event.type) {
 		case YAML_STREAM_START_EVENT:
-			dprintf(1, "YAML_STREAM_START_EVENT\n");
 			parse_stream(L, parser, env);
 			done = 1;
 			break;
