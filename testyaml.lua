@@ -54,6 +54,11 @@ end
 data = yaml.parsefile('report2.yaml')
 dump(data)
 
+print('Parse a function from yaml file:')
+data = yaml.parsefile('luafunction.yaml')
+data.myFunction()
+print(data.myValue)
+
 print('Parse YAMl data from a non-existent file:')
 
 -- This will throw an error

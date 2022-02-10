@@ -22,6 +22,8 @@
 #define __LUA_YAML__
 
 #define LUAYAML_CALL_TAG	"!Lua/call"
+#define LUAYAML_CALLFILE_TAG	"!Lua/callfile"
+#define LUAYAML_FILE_TAG	"!Lua/file"
 #define LUAYAML_FUNCTION_TAG	"!Lua/function"
 
 extern int luaopen_yaml(lua_State *L);

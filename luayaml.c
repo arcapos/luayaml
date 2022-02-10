@@ -134,7 +134,13 @@ push_scalar(lua_State *L, char *value, int length, char *tag, int env)
 			lua_pushnumber(L, atof(value));
 		else if (!strcmp(tag, YAML_STR_TAG))
 			lua_pushlstring(L, value, length);
-		else if (!strcmp(tag, LUAYAML_FUNCTION_TAG)) {
+		else if (!strcmp(tag, LUAYAML_FILE_TAG)) {
+			luaL_loadfile(L, value);
+			if (env > 0) {
+				lua_pushvalue(L, env);
+				lua_setupvalue(L, -2, 1);
+			}
+		} else if (!strcmp(tag, LUAYAML_FUNCTION_TAG)) {
 			luaL_loadstring(L, value);
 			if (env > 0) {
 				lua_pushvalue(L, env);
@@ -142,6 +148,13 @@ push_scalar(lua_State *L, char *value, int length, char *tag, int env)
 			}
 		} else if (!strcmp(tag, LUAYAML_CALL_TAG)) {
 			luaL_loadstring(L, value);
+			if (env > 0) {
+				lua_pushvalue(L, env);
+				lua_setupvalue(L, -2, 1);
+			}
+			lua_call(L, 0, 1);
+		} else if (!strcmp(tag, LUAYAML_CALLFILE_TAG)) {
+			luaL_loadfile(L, value);
 			if (env > 0) {
 				lua_pushvalue(L, env);
 				lua_setupvalue(L, -2, 1);
@@ -419,7 +432,7 @@ luaopen_yaml(lua_State *L)
 #endif
 	lua_settable(L, -3);
 	lua_pushliteral(L, "_VERSION");
-	lua_pushliteral(L, "yaml 1.1.0");
+	lua_pushliteral(L, "yaml 1.1.1");
 	lua_settable(L, -3);
 	return 1;
 }
