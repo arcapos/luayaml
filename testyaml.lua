@@ -58,6 +58,7 @@ print('Parse a function from yaml file:')
 data = yaml.parsefile('luafunction.yaml')
 data.myFunction()
 print(data.myValue)
+print(data.myFile)
 
 print('Parse YAMl data from a non-existent file:')
 

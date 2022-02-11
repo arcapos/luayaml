@@ -18,7 +18,13 @@
 
 /* YAML for Lua */
 
+#include <sys/param.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+
 #include <ctype.h>
+#include <fcntl.h>
 #include <lua.h>
 #include <lauxlib.h>
 #include <yaml.h>
@@ -134,32 +140,50 @@ push_scalar(lua_State *L, char *value, int length, char *tag, int env)
 			lua_pushnumber(L, atof(value));
 		else if (!strcmp(tag, YAML_STR_TAG))
 			lua_pushlstring(L, value, length);
-		else if (!strcmp(tag, LUAYAML_FILE_TAG)) {
+		else if (!strcmp(tag, LUAYAML_LUA_FILE_TAG)) {
 			luaL_loadfile(L, value);
 			if (env > 0) {
 				lua_pushvalue(L, env);
 				lua_setupvalue(L, -2, 1);
 			}
-		} else if (!strcmp(tag, LUAYAML_FUNCTION_TAG)) {
+		} else if (!strcmp(tag, LUAYAML_LUA_FUNCTION_TAG)) {
 			luaL_loadstring(L, value);
 			if (env > 0) {
 				lua_pushvalue(L, env);
 				lua_setupvalue(L, -2, 1);
 			}
-		} else if (!strcmp(tag, LUAYAML_CALL_TAG)) {
+		} else if (!strcmp(tag, LUAYAML_LUA_CALL_TAG)) {
 			luaL_loadstring(L, value);
 			if (env > 0) {
 				lua_pushvalue(L, env);
 				lua_setupvalue(L, -2, 1);
 			}
 			lua_call(L, 0, 1);
-		} else if (!strcmp(tag, LUAYAML_CALLFILE_TAG)) {
+		} else if (!strcmp(tag, LUAYAML_LUA_CALLFILE_TAG)) {
 			luaL_loadfile(L, value);
 			if (env > 0) {
 				lua_pushvalue(L, env);
 				lua_setupvalue(L, -2, 1);
 			}
 			lua_call(L, 0, 1);
+		} else if (!strcmp(tag, LUAYAML_FILE_TAG)) {
+			int fd;
+			unsigned char *content;
+			struct stat sb;
+
+			if (stat(value, &sb))
+				luaL_error(L, "can't stat %s", value);
+
+			if ((fd = open(value, O_RDONLY)) == -1)
+				luaL_error(L, "can't open %s", value);
+
+			if ((content = mmap(0, sb.st_size, PROT_READ,
+			    MAP_PRIVATE, fd, (off_t)0L)) == MAP_FAILED)
+				luaL_error(L, "can't mmap %s", value);
+
+			lua_pushlstring(L, (const char *)content, sb.st_size);
+			munmap(content, sb.st_size);
+			close(fd);
 		} else
 			lua_pushlstring(L, value, length);
 	} else {
@@ -432,7 +456,7 @@ luaopen_yaml(lua_State *L)
 #endif
 	lua_settable(L, -3);
 	lua_pushliteral(L, "_VERSION");
-	lua_pushliteral(L, "yaml 1.1.1");
+	lua_pushliteral(L, "yaml 1.1.2");
 	lua_settable(L, -3);
 	return 1;
 }
