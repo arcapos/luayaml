@@ -10,7 +10,7 @@ code: !Lua/call |
   print(42)
   print(10)
 
-function: !Lua/function |
+function: !Lua/load |
   print 'selector'
   if pos == '-1' then
     return 'select * from syt_pos order by name'

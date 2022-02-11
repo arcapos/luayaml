@@ -25,6 +25,7 @@
 
 #include <ctype.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <lua.h>
 #include <lauxlib.h>
 #include <yaml.h>
@@ -140,13 +141,13 @@ push_scalar(lua_State *L, char *value, int length, char *tag, int env)
 			lua_pushnumber(L, atof(value));
 		else if (!strcmp(tag, YAML_STR_TAG))
 			lua_pushlstring(L, value, length);
-		else if (!strcmp(tag, LUAYAML_LUA_FILE_TAG)) {
+		else if (!strcmp(tag, LUAYAML_LUA_LOADFILE_TAG)) {
 			luaL_loadfile(L, value);
 			if (env > 0) {
 				lua_pushvalue(L, env);
 				lua_setupvalue(L, -2, 1);
 			}
-		} else if (!strcmp(tag, LUAYAML_LUA_FUNCTION_TAG)) {
+		} else if (!strcmp(tag, LUAYAML_LUA_LOAD_TAG)) {
 			luaL_loadstring(L, value);
 			if (env > 0) {
 				lua_pushvalue(L, env);
@@ -456,7 +457,7 @@ luaopen_yaml(lua_State *L)
 #endif
 	lua_settable(L, -3);
 	lua_pushliteral(L, "_VERSION");
-	lua_pushliteral(L, "yaml 1.1.2");
+	lua_pushliteral(L, "yaml 1.2.0");
 	lua_settable(L, -3);
 	return 1;
 }

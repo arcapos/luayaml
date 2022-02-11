@@ -21,10 +21,10 @@
 #ifndef __LUA_YAML__
 #define __LUA_YAML__
 
+#define LUAYAML_LUA_LOAD_TAG		"!Lua/load"
 #define LUAYAML_LUA_CALL_TAG		"!Lua/call"
+#define LUAYAML_LUA_LOADFILE_TAG	"!Lua/loadfile"
 #define LUAYAML_LUA_CALLFILE_TAG	"!Lua/callfile"
-#define LUAYAML_LUA_FILE_TAG		"!Lua/file"
-#define LUAYAML_LUA_FUNCTION_TAG	"!Lua/function"
 
 #define LUAYAML_FILE_TAG		"!file"
 

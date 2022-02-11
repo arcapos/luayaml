@@ -27,7 +27,7 @@ inputs:
           selector: {id}
           display: {name}
 
-query: !Lua/function |
+query: !Lua/load |
   print('selector')
   if pos == '-1' then
     return 'select * from syt_pos order by name'

@@ -1,4 +1,4 @@
-myFunction: !Lua/file luafunction.lua
+myFunction: !Lua/loadfile luafunction.lua
 
 myValue: !Lua/callfile luavalue.lua
 
