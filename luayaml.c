@@ -423,14 +423,17 @@ parseFile(lua_State *L)
 	return 1;
 }
 
-#ifdef DEBUG
 static int
 verbosity(lua_State *L)
 {
+#ifdef DEBUG
+	lua_pushinteger(L, verbose);
 	verbose = luaL_checkinteger(L, 1);
-	return 0;
-}
+#else
+	lua_pushnil(L);
 #endif
+	return 1;
+}
 
 int
 luaopen_yaml(lua_State *L)
@@ -438,9 +441,7 @@ luaopen_yaml(lua_State *L)
 	struct luaL_Reg luayaml[] = {
 		{ "parse",	parseString },
 		{ "parsefile",	parseFile },
-#ifdef DEBUG
 		{ "verbosity",	verbosity },
-#endif
 		{ NULL, NULL }
 	};
 
@@ -450,14 +451,10 @@ luaopen_yaml(lua_State *L)
 	    "micro systems marc balmer");
 	lua_settable(L, -3);
 	lua_pushliteral(L, "_DESCRIPTION");
-#ifdef DEBUG
-	lua_pushliteral(L, "YAML for Lua (with debug functions)");
-#else
 	lua_pushliteral(L, "YAML for Lua");
-#endif
 	lua_settable(L, -3);
 	lua_pushliteral(L, "_VERSION");
-	lua_pushliteral(L, "yaml 1.2.0");
+	lua_pushliteral(L, "yaml 1.2.1");
 	lua_settable(L, -3);
 	return 1;
 }
