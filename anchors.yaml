@@ -1,0 +1,19 @@
+base: &base
+    name: Everyone has same name
+    descr: A description for everyone
+
+foo: &foo
+    <<: *base
+    age: 10
+
+bar: &bar
+    <<: *base
+    age: 20
+
+baz: &baz
+    <<: *base
+    age: &age 20
+
+boom:
+  <<: *base
+  age: *age

@@ -1,4 +1,4 @@
-SRCS=		luayaml.c
+SRCS=		luayaml.c anchor.c
 LIB=		yaml
 
 LUAVER=		$(shell lua -v 2>&1 | cut -c 5-7)
